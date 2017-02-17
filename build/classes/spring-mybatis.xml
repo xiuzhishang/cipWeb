@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:aop="http://www.springframework.org/schema/aop" 
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.1.xsd 
+		http://www.springframework.org/schema/tx 
+		http://www.springframework.org/schema/tx/spring-tx-3.1.xsd 
+		http://www.springframework.org/schema/jee 
+		http://www.springframework.org/schema/jee/spring-jee-3.1.xsd 
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context-3.1.xsd 
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop-3.1.xsd "
+	default-autowire="byName">
+	<!-- 
+		因为spring的context是父子容器，所以会产生冲突，由ServletContextListener产生的是父容器，
+		springMVC产生的是子容器，子容器Controller进行扫描装配时装配了@Service注解的实例，
+		而该实例理应由父容器进行初始化以保证事务的增强处理，
+		所以此时得到的将是原样的Service（没有经过事务加强处理，故而没有事务处理能力。
+	 -->
+	<context:component-scan base-package="com.chinapay.cip.*" >
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" /> 
+	</context:component-scan>
+	
+	<context:property-placeholder location="classpath:jdbc.properties" />
+	<!-- 数据源配置 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" >
+		<property name="driverClassName" value="${driver}" />
+		<property name="url" value="${url}" />		
+		<property name="username" value="${username}" />
+		<property name="password" value="${password}" />		
+		<property name="maxActive" value="100" />  
+        <property name="maxIdle" value="5" />  
+        <property name="maxWait" value="60000" />  
+        <property name="defaultAutoCommit" value="false" />  
+        <property name="validationQuery" value="select 1" />  
+        <property name="testOnBorrow" value="true" />  
+	</bean>
+	
+	<!-- myBatis配置 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">  
+	    <property name="mapperLocations" value="classpath:/com/chinapay/cip/sqlmap/*.xml"/>	    
+	    <property name="dataSource" ref="dataSource" />
+	</bean>
+	
+	<!--  
+        mybatis自动扫描加载Sql映射文件/接口 : MapperScannerConfigurer sqlSessionFactory  
+  
+        basePackage:指定sql映射文件/接口所在的包（自动扫描）  
+    -->  
+  	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">  
+        <property name="basePackage" value="com.chinapay.cip.mapper"></property>  
+       	<property name="sqlSessionFactory" ref="sqlSessionFactory"></property>
+    </bean>
+	
+	<!-- 事务配置 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+		<!-- qualifier value="iSecScan" / --> 
+	</bean>
+	
+	<!-- 全注解方式   需加上@Transactional --> 
+	<!-- 即对@Transactional注解进行驱动，也就是对加上@Transactional注解的类进行事务管理 --> 
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+
+	<!-- 需要事务控制的业务方法配置 -->
+	<!-- spring 是通过<tx:advice>和<aop:config> 两个标签配置事务管理,即针对service即使没有@Transactional注解也进行事务管理，-->
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<!-- tx:attribute标签所配置的是作为事务的方法的命名类型以及一些事务逻辑规则 -->
+		<tx:attributes>
+			<!-- 事务管理中，针对方法名以get/find/query/select/count开头的均为只读事务  -->
+			<!-- 只读事务:从某一时间点开始到这个事务结束，其他事务提交的数据，该事务将看不见。
+			单条查询语句一般用不到此情况，但是如果多表关联查询，如果你一次执行多条查询语句，
+			例如统计查询，报表查询，在这种场景下，多条查询SQL必须保证整体的读一致性，
+			否则，在前条SQL查询之后，后条SQL查询之前，数据被其他用户改变，则该次整体的统计查询将会出现读数据不一致的状态，
+			此时，应该启用事务只读支持-->
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="find*" read-only="true" />
+			<tx:method name="query*" read-only="true" />
+			<tx:method name="select*" read-only="true" />
+			<tx:method name="count*" read-only="true" />
+			<!-- 针对任何的exception，都执行回滚动作  -->
+			<tx:method name="*"  rollback-for="Exception"/>
+		</tx:attributes>
+	</tx:advice>
+
+	<!-- 事务控制拦截器 -->
+	<!-- aop:config配置需要进行事务管理的类，一般情况下，service层下面处理的都是关于数据库操作的相关逻辑，因此一般事务管理配置在service层下的所有类 -->
+	<aop:config proxy-target-class="true">
+		<!-- <aop:advisor pointcut="execution(* *..service..*Service.*(..)) or execution(* *..service..*Impl.*(..))" -->
+		<!-- * 通配符 第一个*代表的是返回值，第二个* 代表ideal包下面的子包，
+		第三个*代表的是service下面的子包、类 ，第四个*代表方法名，(..)代表是方法参数-->
+		<!-- pointcut是指哪些需要执行aop  -->
+		<aop:advisor pointcut="execution(* com.chinapay.cip.service.*.*(..))" advice-ref="txAdvice" />
+	</aop:config>
+	
+</beans>

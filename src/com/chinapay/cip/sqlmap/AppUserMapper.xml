@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.chinapay.cip.mapper.AppUserMapper">
+	 <resultMap type="com.chinapay.cip.model.AppUser" id="AppUserResultMapper">
+	 	   <result column="USERID" jdbcType="BIGINT" property="USERID" />
+		   <result column="AGREEMENT_NUM" jdbcType="VARCHAR" property="AGREEMENT_NUM" />
+		   <result column="MERCODE" jdbcType="VARCHAR" property="MERCODE" />
+		   <result column="CUST_CODE" jdbcType="VARCHAR" property="CUST_CODE" />
+		   <result column="USERNAME" jdbcType="VARCHAR" property="USERNAME" />
+		   <result column="PASSWORD" jdbcType="VARCHAR" property="PASSWORD" />
+		   <result column="EMAIL" jdbcType="VARCHAR" property="EMAIL" />
+		   <result column="MOBILE" jdbcType="VARCHAR" property="MOBILE" />
+		   <result column="FULLNAME" jdbcType="VARCHAR" property="FULLNAME" />
+		   <result column="DELFLAG" jdbcType="INTEGER" property="DELFLAG" />
+		   <result column="USERTYPE" jdbcType="CHAR" property="USERTYPE" />
+		   <result column="TRADEPWD" jdbcType="VARCHAR" property="TRADEPWD" />
+		   <result column="LOGINPWDERR" jdbcType="INTEGER" property="LOGINPWDERR" />
+		   <result column="TRADEPWDERR" jdbcType="INTEGER" property="TRADEPWDERR" />
+		   <result column="LOGINPWDLOCK" jdbcType="INTEGER" property="LOGINPWDLOCK" />
+		   <result column="TRADEPWDLOCK" jdbcType="INTEGER" property="TRADEPWDLOCK" />
+		   <result column="SESSIONID" jdbcType="VARCHAR" property="SESSIONID" />
+		   <result column="IMEI" jdbcType="VARCHAR" property="IMEI" />
+		   <result column="IMSI" jdbcType="VARCHAR" property="IMSI" />
+		   <result column="MACADDRESS" jdbcType="VARCHAR" property="MACADDRESS" />
+		   <result column="APPNAME" jdbcType="VARCHAR" property="APPNAME" />
+		   <result column="VERSIONCODE" jdbcType="VARCHAR" property="VERSIONCODE" />
+		   <result column="OSTYPE" jdbcType="VARCHAR" property="OSTYPE" />
+		   <result column="IPADDRESS" jdbcType="VARCHAR" property="IPADDRESS" />
+		   <result column="CREATE_DATE" jdbcType="TIMESTAMP" property="CREATE_DATE" />
+		   <result column="LASTLOGIN" jdbcType="TIMESTAMP" property="LASTLOGIN" />
+		   <result column="STATUS" jdbcType="CHAR" property="STATUS" />
+		   <result column="NICK_NAME" jdbcType="VARCHAR" property="NICK_NAME" />
+		   <result column="MOD_TIME" jdbcType="TIMESTAMP" property="MOD_TIME" />
+		   <result column="OPERUSER" jdbcType="VARCHAR" property="OPERUSER" />
+		    <result column="MERSUBID" jdbcType="VARCHAR" property="MERSUBID" />
+	 </resultMap>
+
+  <select id="selectByUnamePwd" parameterType="com.chinapay.cip.model.AppUser" resultMap="AppUserResultMapper">
+    select a.* from APP_USER a 
+     where a.delflag = 0 and a.status in ('0','2','1')
+     	<if test="PASSWORD!=null and PASSWORD!=''">
+             and a.password=#{PASSWORD}
+        </if>
+        <if test="USERNAME!=null and USERNAME!=''">
+             and a.username=#{USERNAME}
+        </if>
+        <if test="AGREEMENT_NUM!=null and AGREEMENT_NUM!=''">
+             and a.AGREEMENT_NUM=#{AGREEMENT_NUM}
+        </if>
+        <if test="MERCODE!=null and MERCODE!=''">
+             and a.MERCODE=#{MERCODE}
+        </if>
+        <if test="CUST_CODE!=null and CUST_CODE!=''">
+             and UPPER(a.CUST_CODE)=#{CUST_CODE}
+        </if>
+        <if test="MOBILE!=null and MOBILE!=''">
+             and a.MOBILE=#{MOBILE}
+        </if>
+         <if test="STATUS!=null and STATUS!=''">
+             and a.STATUS=#{STATUS}
+        </if>
+         <if test="USERTYPE!=null and USERTYPE!=''">
+             and a.USERTYPE=#{USERTYPE}
+        </if>
+  </select>
+  
+   
+</mapper>

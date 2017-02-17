@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE sqlMapConfig PUBLIC "-//ibatis.apache.org//DTD SQL Map Config 2.0//EN"
+    "http://ibatis.apache.org/dtd/sql-map-config-2.dtd">
+
+<sqlMapConfig>
+	 <!-- 加载数据库文件db.properties -->
+	 <!-- properties中还可以配置一些属性名和属性值,此处的优先加载 -->
+    <properties resource="jdbc.properties" />
+	
+    <settings useStatementNamespaces="true" cacheModelsEnabled="true"/>
+    <!-- 使用jdbc事务管理,事务控制由mybatis管理-->
+    <transactionManager type="JDBC">
+    
+		<dataSource type="DBCP">
+            <property name="JDBC.Driver" value="${driver}" />
+            <property name="JDBC.ConnectionURL" value="${url}" />
+            <property name="JDBC.Username" value="${username}" />
+            <property name="JDBC.Password" value="${password}" />
+            <property name="Pool.MaximumActiveConnections" value="100" />
+            <property name="Pool.MaximumIdleConnections" value="5" />
+            <property name="Pool.MaximumWait" value="60000" />
+            <property name="Pool.ValidationQuery" value="select count(1) from CP_BANK" />
+            <property name="Pool.LogAbandoned" value="false" />
+            <property name="Pool.RemoveAbandoned" value="false" />
+            <property name="Pool.RemoveAbandonedTimeout" value="50000" />
+        </dataSource>
+          
+         <!--
+       <dataSource type="JNDI">
+            <property name="DataSource" value="${jndiName}"/>
+        </dataSource>
+          -->  
+    </transactionManager>
+    
+	<sqlMap resource="com/chinapay/cip/sqlmap/AppUserMapper.xml" />
+</sqlMapConfig>
